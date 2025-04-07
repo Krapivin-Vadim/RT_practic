@@ -1,0 +1,105 @@
+@startuml Class_diagram
+
+class Server{
+  orders_list
+  add_order_to_list()
+  process_order()
+}
+
+class Camera{
+  find_user()
+  find_robot()
+  find_extruder()
+  send_datas()
+} 
+
+class Telegram_bot{
+  make_an_order()
+  send_datas()
+}
+
+class Navigation_system{
+  user_location
+  robot_location
+  extruder_location
+  get_user_location()
+  get_robot_location()
+  route(destination_point)
+  send_route()
+}
+
+class Robot{
+  read_route()
+  follow_to_user()
+  follow_to_extruder()
+  send_success_statu()
+}
+
+
+
+class Extruder{
+  сurrent_coffee_volume
+  start_pouring()
+  stop_pouring()
+  cap_is_fuul()
+}
+
+' class Motor{
+'   start()
+'   move_forward(distance)
+'   turn_right(degree)
+'   turn_left(degree)
+'   move_back(distance)
+'   stop()
+' }
+
+class ControlSystem{
+  Engine
+  CmdReceiver
+  void run()
+  Cmd parseMessage(string msg)
+}
+
+class AEngine{
+  void formward(int time_ms)
+  void right(int time_ms)
+  void left(int time_ms)
+  void stop()
+}
+
+class ACmd_Recevier{
+  string receive()
+}
+
+class FooEngine{
+  ' Будет выводить на экран имя метода и задерживать поток на time_ms
+  void formward(int time_ms)
+  void right(int time_ms)
+  void left(int time_ms)
+  void stop()
+}
+
+class FooCmdReceiver{
+  'при вызове метода, receive будет получать пользователя команду с экрана и возвращать ее в виде строки
+  string receive()
+}
+
+struct Cmd{
+  string name
+  int args
+}
+
+Server <-- Telegram_bot
+Camera --> Navigation_system
+Robot --> Navigation_system
+Extruder --> Navigation_system
+Navigation_system --* Server
+
+FooEngine <|-- AEngine
+FooCmdReceiver <|--  ACmd_Recevier
+ControlSystem *-- FooCmdReceiver
+ControlSystem *-- FooEngine
+Cmd -> ControlSystem 
+Robot *-- ControlSystem
+
+@enduml
