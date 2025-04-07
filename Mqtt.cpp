@@ -24,19 +24,10 @@ void Mqtt::on_connect(struct mosquitto* mosq, void* userdata, int rc){
 }
 
 void Mqtt::on_message(struct mosquitto* mosq, void* userdata, const struct mosquitto_message* msg) {
-  //std::cout << "on_message start" << std::endl;
-    //std::cout << sizeof(msg->payload) / sizeof(char);
-    // std::cout << "Message received ["
-    //           << msg->topic << "]: "
-    //           << static_cast<char*>(msg->payload)
-    //           << std::endl;
     char* text = static_cast<char*>(msg->payload);
     for(unsigned int i = 0; i != msg->payloadlen; ++i){
       message.push_back(text[i]);
     }
-    //std::cout << message << std::endl;
-    //message.shrink_to_fit();
-    //std::cout << "on_message end" << std::endl;
 }
 
 
@@ -62,11 +53,9 @@ Mqtt::Mqtt(){
 }
 
 std::string Mqtt::get_message(){
-  //std::cout << "get_message start" << std::endl;
   while(message.length() == 0){
     mosquitto_loop(mosq, 100, 1);
   }
-  //std::cout << "get_message end" << std::endl;
   std::string output(message);
   message.shrink_to_fit();
   return output;

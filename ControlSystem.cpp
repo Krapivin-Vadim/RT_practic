@@ -6,12 +6,9 @@
 
 void ControlSystem::run(){
   string msg = Receiver.receive();
-  //std::cout << msg << std::endl;
-  //std::cout << ">1" << std::endl;
   Cmd cmd = parseMessage(msg);
   std::cout << "Cmd >>>" << cmd.name << " " << cmd.args << std::endl;
   if (cmd.args){
-    //void(*foo)(int);
     std::function<void(int)> foo;
     foo = Engine.cmd_list[cmd.name];
     foo(cmd.args);
