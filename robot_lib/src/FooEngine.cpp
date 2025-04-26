@@ -1,6 +1,7 @@
 #include "FooEngine.h"
 #include <iostream>
-#include <Windows.h>
+//#include <Windows.h>
+#include <unistd.h>
 #include <string>
 
 
@@ -13,17 +14,17 @@ FooEngine::FooEngine(){
 
 void FooEngine::forward(int time_ms) {
   std::cout << "forward " << time_ms << endl;
-  Sleep(time_ms);
+  sleep(time_ms);
 }
 
 void FooEngine::left(int time_ms) {
   std::cout << "left" << endl;
-  Sleep(time_ms);
+  sleep(time_ms);
 }
 
 void FooEngine::right(int time_ms) {
   std::cout << "right" << endl;
-  Sleep(time_ms);
+  sleep(time_ms);
 }
 
 void FooEngine::stop() {

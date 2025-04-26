@@ -4,23 +4,29 @@
 #include <iostream>
 #include <functional>
 
+
 void ControlSystem::run(){
   string msg = Receiver.receive();
-  Cmd cmd = parseMessage(msg);
-  std::cout << "Cmd >>>" << cmd.name << " " << cmd.args << std::endl;
-  if (cmd.args){
+  list<Cmd> cmds = parseMessage(msg);
+  while(cmds.size() > 0){
+    Cmd cmd = cmds.front();
+    std::cout << "Cmd >>>" << cmd.name << " " << cmd.args << std::endl;
     std::function<void(int)> foo;
     foo = Engine.cmd_list[cmd.name];
     foo(cmd.args);
-  }
-  else{
-    Engine.stop();
+    cmds.pop_front();
   }
 }
 
-Cmd ControlSystem::parseMessage(string message){
+
+list<Cmd> ControlSystem::parseMessage(string message){
   stringstream cmd_define(message);
+  list<Cmd> out;
   Cmd cmd;
-  cmd_define >> cmd.name >> cmd.args;
-  return cmd;
+  while(cmd_define >> cmd.name >> cmd.args){
+    out.push_back(cmd);
+    cmd.args = 0;
+    cmd.name.clear();
+  }
+  return out;
 }

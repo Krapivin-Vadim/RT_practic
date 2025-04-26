@@ -1,6 +1,7 @@
 #pragma once
 #include "FooEngine.h"
 #include "FooCmdReciver.h"
+#include <list>
 
 struct Cmd{
   string name;
@@ -10,7 +11,8 @@ struct Cmd{
 class ControlSystem{
   FooEngine Engine;
   FooCmdReceiver Receiver;
-  Cmd parseMessage(string message);
+  list<Cmd> parseMessage(string message);
   public:
   void run();
+  //void execute_command();
 };
