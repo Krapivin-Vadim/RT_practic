@@ -2,11 +2,13 @@
 
 class Server{
   orders_list
+  OpenCV_server
+  Telegram_bot
   add_order_to_list()
   process_order()
 }
 
-class Camera{
+class OpenCV_server{
   find_user()
   find_robot()
   find_extruder()
@@ -18,7 +20,7 @@ class Telegram_bot{
   send_datas()
 }
 
-class Navigation_system{
+class OpenCV_server{
   user_location
   robot_location
   extruder_location
@@ -44,14 +46,25 @@ class Extruder{
   cap_is_fuul()
 }
 
-' class Motor{
-'   start()
-'   move_forward(distance)
-'   turn_right(degree)
-'   turn_left(degree)
-'   move_back(distance)
-'   stop()
-' }
+class MainEngine{
+  Motor left_motor
+  Motor right_motor
+  unordered_map<...> cmd_list
+  MainEngine()
+  void forward(int ms)
+  void left(int ms)
+  void right(int ms)
+}
+
+class Motor{
+  int chip_fd
+  int line_fd
+  Motor(int pin_1, int pin_2)
+  ~Motor()
+  void forward()
+  void backward()
+  void_stop()
+}
 
 class ControlSystem{
   Engine
@@ -73,6 +86,7 @@ class ACmd_Recevier{
 
 class FooEngine{
   ' Будет выводить на экран имя метода и задерживать поток на time_ms
+  unordered_map<...> cmd_list
   void formward(int time_ms)
   void right(int time_ms)
   void left(int time_ms)
@@ -89,11 +103,24 @@ struct Cmd{
   int args
 }
 
+class MQTT{
+  const char* BROKER_ADDRES
+  const int BROKER_PORT
+  static const char* TOPIC
+  static const int QOS
+  const char* CLIENT_ID
+  struct mosquitto* mosq
+  int rc
+  static void void on_connect(struct mosquitto* mosq, void* userdata, int rc)
+  static void on_message(struct mosquitto* mosq, void* userdata, const struct mosquitto_message* msg)
+  Mqtt()
+  static std::string message
+  std::string get_message()
+}
+
 Server <-- Telegram_bot
-Camera --> Navigation_system
-Robot --> Navigation_system
-Extruder --> Navigation_system
-Navigation_system --* Server
+Robot --> OpenCV_server
+OpenCV_server --* Server
 
 FooEngine <|-- AEngine
 FooCmdReceiver <|--  ACmd_Recevier
@@ -101,5 +128,7 @@ ControlSystem *-- FooCmdReceiver
 ControlSystem *-- FooEngine
 Cmd -> ControlSystem 
 Robot *-- ControlSystem
-
+MainEngine <|-- AEngine
+MainEngine *-- Motor
+FooCmdReceiver <- MQTT
 @enduml

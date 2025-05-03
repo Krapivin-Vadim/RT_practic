@@ -5,14 +5,14 @@ actor User
 
 User -->  Telegram_bot : make_an_order()
 Telegram_bot --> Server : add_order_to_list()
-Server --> Navigation_system : process_order()
-Navigation_system --> Camera : get_extruder_location()
-Camera --> Navigation_system : extruder_location
-Navigation_system --> Camera : get_bot_location()
-Camera --> Navigation_system : bot_location
-Navigation_system --> Camera : get_user_location()
-Camera --> Navigation_system : user_location
-Navigation_system --> Bot : send_route()
+Server --> OpenCV_server : process_order()
+OpenCV_server --> Camera : get_extruder_location()
+Camera --> OpenCV_server : extruder_location
+OpenCV_server --> Camera : get_bot_location()
+Camera --> OpenCV_server : bot_location
+OpenCV_server --> Camera : get_user_location()
+Camera --> OpenCV_server : user_location
+OpenCV_server --> Bot : send_route()
 Bot --> User : follow_to_user()
 User --> Bot : give a cap
 Bot --> Extruder : follow_to_extruder()
