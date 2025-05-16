@@ -1,0 +1,134 @@
+@startuml Class_diagram
+
+class Server{
+  orders_list
+  OpenCV_server
+  Telegram_bot
+  add_order_to_list()
+  process_order()
+}
+
+class OpenCV_server{
+  find_user()
+  find_robot()
+  find_extruder()
+  send_datas()
+} 
+
+class Telegram_bot{
+  make_an_order()
+  send_datas()
+}
+
+class OpenCV_server{
+  user_location
+  robot_location
+  extruder_location
+  get_user_location()
+  get_robot_location()
+  route(destination_point)
+  send_route()
+}
+
+class Robot{
+  read_route()
+  follow_to_user()
+  follow_to_extruder()
+  send_success_statu()
+}
+
+
+
+class Extruder{
+  сurrent_coffee_volume
+  start_pouring()
+  stop_pouring()
+  cap_is_fuul()
+}
+
+class MainEngine{
+  Motor left_motor
+  Motor right_motor
+  unordered_map<...> cmd_list
+  MainEngine()
+  void forward(int ms)
+  void left(int ms)
+  void right(int ms)
+}
+
+class Motor{
+  int chip_fd
+  int line_fd
+  Motor(int pin_1, int pin_2)
+  ~Motor()
+  void forward()
+  void backward()
+  void_stop()
+}
+
+class ControlSystem{
+  Engine
+  CmdReceiver
+  void run()
+  Cmd parseMessage(string msg)
+}
+
+class AEngine{
+  void formward(int time_ms)
+  void right(int time_ms)
+  void left(int time_ms)
+  void stop()
+}
+
+class ACmd_Recevier{
+  string receive()
+}
+
+class FooEngine{
+  ' Будет выводить на экран имя метода и задерживать поток на time_ms
+  unordered_map<...> cmd_list
+  void formward(int time_ms)
+  void right(int time_ms)
+  void left(int time_ms)
+  void stop()
+}
+
+class FooCmdReceiver{
+  'при вызове метода, receive будет получать пользователя команду с экрана и возвращать ее в виде строки
+  string receive()
+}
+
+struct Cmd{
+  string name
+  int args
+}
+
+class MQTT{
+  const char* BROKER_ADDRES
+  const int BROKER_PORT
+  static const char* TOPIC
+  static const int QOS
+  const char* CLIENT_ID
+  struct mosquitto* mosq
+  int rc
+  static void void on_connect(struct mosquitto* mosq, void* userdata, int rc)
+  static void on_message(struct mosquitto* mosq, void* userdata, const struct mosquitto_message* msg)
+  Mqtt()
+  static std::string message
+  std::string get_message()
+}
+
+Server <-- Telegram_bot
+Robot --> OpenCV_server
+OpenCV_server --* Server
+
+FooEngine <|-- AEngine
+FooCmdReceiver <|--  ACmd_Recevier
+ControlSystem *-- FooCmdReceiver
+ControlSystem *-- FooEngine
+Cmd -> ControlSystem 
+Robot *-- ControlSystem
+MainEngine <|-- AEngine
+MainEngine *-- Motor
+FooCmdReceiver <- MQTT
+@enduml
