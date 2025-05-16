@@ -1,0 +1,12 @@
+certifi==2025.4.26
+charset-normalizer==3.4.2
+idna==3.10
+numpy==2.2.5
+opencv-python==4.11.0.86
+paho-mqtt==2.1.0
+pyTelegramBotAPI==4.27.0
+requests==2.32.3
+style==1.1.0
+telebot==0.0.5
+update==0.0.1
+urllib3==2.4.0
