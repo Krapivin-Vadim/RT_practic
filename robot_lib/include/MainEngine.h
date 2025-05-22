@@ -7,9 +7,10 @@ class MainEngine: public FooEngine{
     std::unordered_map<std::string, std::function<void(int)>> cmd_list;
     Motor left_motor;
     Motor right_motor;
+public:
     MainEngine();
     void forward(int time_ms) override;
     void left(int time_ms) override;
     void right(int time_ms) override;
-    //void stop() override;
+    void stop() override;
 };

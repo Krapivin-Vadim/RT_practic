@@ -1,0 +1,1 @@
+/usr/bin/arm-linux-gnueabihf-g++ CMakeFiles/Bot_2.dir/Source.cpp.o -o Bot_2  robot_lib/libRobot.a robot_lib/include/Mqtt/libMqtt.a /home/vadim/bot/MAI_Barista/mymqtt/mosquitto-2.0.15/build/lib/libmosquitto_static.a 

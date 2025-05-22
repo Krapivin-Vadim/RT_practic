@@ -1,0 +1,9 @@
+/home/vadim/bot/MAI_Barista/mqtt_build/CMakeFiles/Bot_2.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/CMakeFiles/edit_cache.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/CMakeFiles/rebuild_cache.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/robot_lib/CMakeFiles/Robot.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/robot_lib/CMakeFiles/edit_cache.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/robot_lib/CMakeFiles/rebuild_cache.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/robot_lib/include/Mqtt/CMakeFiles/Mqtt.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/robot_lib/include/Mqtt/CMakeFiles/edit_cache.dir
+/home/vadim/bot/MAI_Barista/mqtt_build/robot_lib/include/Mqtt/CMakeFiles/rebuild_cache.dir

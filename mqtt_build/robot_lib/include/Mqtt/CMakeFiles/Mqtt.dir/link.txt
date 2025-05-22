@@ -1,0 +1,2 @@
+/usr/bin/arm-linux-gnueabihf-ar qc libMqtt.a CMakeFiles/Mqtt.dir/Mqtt.cpp.o
+/usr/bin/arm-linux-gnueabihf-ranlib libMqtt.a
