@@ -4,6 +4,7 @@ from telegram import TOKEN
 from mosquitto import Mosquitto
 import threading
 from numpy.linalg import norm
+from time import sleep
 
 cam = 0
 mqtt_pub_topic = "pub/topic"
@@ -11,8 +12,8 @@ mqtt_sub_topic = "sub/topic"
 
 if __name__ == "__main__":
     camera = Camera(cam)
+    camera.static_calibration("blue")
     camera.imget()
-    # camera.calibration('blue')
 
     telegram_bot = Drink_offer_bot(TOKEN)
 
@@ -23,6 +24,7 @@ if __name__ == "__main__":
 
     while telegram_bot.running:
         if len(telegram_bot.orders) == 0:
+            sleep(5)
             continue
         current_order = telegram_bot.pop_order()
         camera.imget()
@@ -30,16 +32,19 @@ if __name__ == "__main__":
         camera.build_masks()
         for color in camera.color_location.keys():
             camera.get_color_location(color)
-        # camera.fix_location()
         camera.get_middle_location()
+        camera.fix_location()
         camera.get_vector('blue', 'red')
         camera.get_vector('middle', 'green')
-        camera.get_angle()
+        diraction, angle = camera.get_angle()
         try:
             module = norm(camera.color_vector['middle-green'])
         except Exception:
             module = 0.0
-        mosquitto.pub(f"Turn {camera.angle}")
+        if diraction > 0:
+            mosquitto.pub(f"left {angle}")
+        else:
+            mosquitto.pub(f"right {angle}")
         mosquitto.pub(f"forward {module}")
 
         # mosquitto.get_messsage()

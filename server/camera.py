@@ -1,5 +1,9 @@
 import cv2
 import numpy as np
+from copy import deepcopy
+from os.path import abspath
+
+PATH = '\\'.join([i for i in abspath(__file__).split("\\")[:-1]])
 
 
 class Camera:
@@ -94,7 +98,7 @@ class Camera:
     def show(self):
         for color in self.color_location.keys():
             location = self.color_location[color]
-            if not location:
+            if location is not None:
                 continue
             cv2.circle(self.frame, location, 5,
                        (0, 0, 255), 1)  # Probably '-1'
@@ -135,8 +139,7 @@ class Camera:
             self.color_vector['middle-green'][1]
         cos = (x + y) / (module_mg * module_rb)
         self.angle = np.arccos(cos)
-        print(cos)
-        print(self.angle)
+        return [cos, self.angle]
 
     def calibration(self, color):
         srcPoints = []
@@ -152,6 +155,59 @@ class Camera:
         self.H_matrix, _ = cv2.findHomography(
             srcPoints, truePoints, cv2.RANSAC, 5.0)
 
+    def static_calibration(self, color):
+        srcdataset = [
+            rf"{PATH}\true_dataset\photo_2025-05-23_22-21-{num}.jpg" for num in range(1, 5)]
+        no_srcdataset = [
+            rf"{PATH}\perspective_dataset\photo_2025-05-23_22-20-{num}.jpg" for num in range(1, 5)]
+
+        src_points = []
+        no_src_points = []
+        for file in srcdataset:
+            self.frame = cv2.imread(file)
+            self.to_hsv()
+            self.build_masks()
+            self.get_color_location(color)
+            src_points.append(list(self.color_location[color]))
+
+        for file in no_srcdataset:
+            self.frame = cv2.imread(file)
+            self.to_hsv()
+            self.build_masks()
+            self.get_color_location(color)
+            no_src_points.append(list(self.color_location[color]))
+
+        src_points = np.array(src_points, dtype=np.float32)
+        no_src_points = np.array(no_src_points, dtype=np.float32)
+        self.H_matrix, _ = cv2.findHomography(
+            no_src_points, src_points, cv2.RANSAC, 3.0)
+
+        # # Only for test
+
+        # fixed_location = []
+
+        # for item in no_src_points:
+        #     item = np.append(item, 1)
+        #     res = np.dot(self.H_matrix, item)
+        #     res = res / res[2]
+        #     res = res[:2]
+        #     fixed_location.append(res)
+
+        # print(src_points, end='\n-----\n')
+        # print(no_src_points, end='\n-----\n')
+        # print(fixed_location)
+        # frame = cv2.imread(
+        #     rf"{PATH}\true_dataset\photo_2025-05-23_22-21-{4}.jpg")
+        # for point in fixed_location:
+        #     point = [int(i) for i in point]
+        #     cv2.circle(frame, point, 5,
+        #                (0, 0, 255), 1)  # Probably '-1'
+        #     cv2.putText(frame, f'{point[0]}:{point[1]}',
+        #                 (point[0]+10, point[1]-10),
+        #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        # cv2.imshow("frame", frame)
+        # cv2.waitKey(-1)
+
     def fix_location(self):
         if self.H_matrix is None:
             print("Undefined Homography matrix")
@@ -161,17 +217,24 @@ class Camera:
             for key in item.keys():
                 if item[key] is None:
                     continue
-                item[key] = np.dot(self.H_matrix, item[key])
+
+                item_3_dim = np.append(item[key], 1)
+                res = np.dot(self.H_matrix, item_3_dim)
+                res = res / res[2]
+                res = res[:2]
+                item[key] = res
 
 
 if __name__ == '__main__':
-    test = Camera(0)
-    test.imget()
-    img = cv2.imread('test_img.jpg')
-    test.frame = img
 
+    test = Camera(0)
+    test.static_calibration("blue")
+    test.imget()
+    img_frame = cv2.imread("C:\\Dev\\opencv_server\\test_4.jpg")
+    test.frame = img_frame
     test.to_hsv()
     test.build_masks()
+
     for color in test.color_location.keys():
         test.get_color_location(color)
 
@@ -181,5 +244,8 @@ if __name__ == '__main__':
         color1, color2 = vect.split('-')
         test.get_vector(color1, color2)
 
-    test.get_angle()
+    test.fix_location()
+
+    a = test.get_angle()
+
     test.show()
