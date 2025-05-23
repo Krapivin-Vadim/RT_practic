@@ -68,3 +68,7 @@ void Mqtt::connect(){
 std::string Mqtt::get_message(){
     return this->buffer;
 }
+
+void Mqtt::send_message(std::string message){
+    mosquitto_publish(this->mosq, nullptr, this->topic.c_str(), message.size(), message.c_str(), 0, false);
+}

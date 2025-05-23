@@ -5,6 +5,7 @@
 #include <functional>
 #include "FooEngine.h"
 #include "MainEngine.h"
+#include "../include/Mqtt/Mqtt.h"
 
 string work_mode = "work";
 
@@ -48,6 +49,9 @@ void ControlSystem::run(){
     cmds.pop_front();
   }
   cout << "stop run\n";
+  Mqtt answear(this->addres, this->port, this->topic);
+  answear.connect();
+  answear.send_message("done");
 }
 
 bool ControlSystem::isrunnig(){
