@@ -70,5 +70,22 @@ std::string Mqtt::get_message(){
 }
 
 void Mqtt::send_message(std::string message){
-    mosquitto_publish(this->mosq, nullptr, this->topic.c_str(), message.size(), message.c_str(), 0, false);
+    
+    struct mosquitto* pub_mosq = mosquitto_new(NULL, true, this);
+    if (!pub_mosq) {
+        std::cout << "Ошибка создания клиента\n";
+        std::cout << stderr << std::endl;
+        return;
+    }
+    int pub_rc = mosquitto_connect(pub_mosq, this->host.c_str(), this->port, 60);
+    if (pub_rc != MOSQ_ERR_SUCCESS) {
+        std::cout << "Не удалось подключиться: " << mosquitto_strerror(this->rc) << std::endl;
+        return;
+    }
+
+    mosquitto_publish(pub_mosq, nullptr, this->topic.c_str(), message.size(), message.c_str(), 0, false);
+    mosquitto_disconnect(pub_mosq);
+    mosquitto_destroy(pub_mosq);
+    mosquitto_lib_cleanup();
+
 }
