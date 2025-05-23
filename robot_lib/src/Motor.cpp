@@ -3,7 +3,6 @@
 #include <fcntl.h>
 #include <iostream>
 #include <cstring>
-#include <gpiod.h>
 #include <sys/ioctl.h>
 
 const char* chip = "/dev/gpiochip0";
@@ -35,15 +34,15 @@ Motor::~Motor(){
 
 void Motor::forward(){
     struct gpiohandle_data data;
-    data.values[0] = 1;
-    data.values[1] = 0;
+    data.values[1] = 1;
+    data.values[0] = 0;
     ioctl(line_fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
 }
 
 void Motor::backward(){
     struct gpiohandle_data data;
-    data.values[0] = 0;
-    data.values[1] = 1;
+    data.values[1] = 0;
+    data.values[0] = 1;
     ioctl(line_fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
 }
 

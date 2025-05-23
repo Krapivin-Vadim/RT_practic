@@ -1,62 +1,70 @@
 #include "Mqtt.h"
-
 #include <mosquitto.h>
-#include <cstring>
 #include <iostream>
 
-// Mqtt::BROKER_ADDRESS = "localhost";
-// Mqtt::BROKER_PORT = 1883;
-const char* Mqtt::TOPIC = "test/topic";
-// Mqtt::QOS = 1;
-// Mqtt::CLIENT_ID = "subscriber"
-std::string Mqtt::message = "";
 
-void Mqtt::on_connect(struct mosquitto* mosq, void* userdata, int rc){
-  if (rc == 0) {
-    std::cout << "Connected to broker!" << std::endl;
-    mosquitto_subscribe(mosq, nullptr, TOPIC, QOS);
-    }
-  else {
-      std::cerr << "Connection error: "
-                << mosquitto_connack_string(rc)
-                << std::endl;
+// Callback-функция при подключении
+void Mqtt::on_connect(struct mosquitto *mosq, void *obj, int rc) {
+    if (rc == 0) {
+        printf("Подключено к брокеру\n");
+        // Подписываемся на топик после подключения
+        mosquitto_subscribe(mosq, NULL, static_cast<Mqtt*>(obj)->topic.c_str(), 0);
+    } else {
+        fprintf(stderr, "Ошибка подключения: %s\n", mosquitto_connack_string(rc));
     }
 }
 
-void Mqtt::on_message(struct mosquitto* mosq, void* userdata, const struct mosquitto_message* msg) {
-    char* text = static_cast<char*>(msg->payload);
-    for(unsigned int i = 0; i != msg->payloadlen; ++i){
-      message.push_back(text[i]);
+//Callback-функция при получении сообщения
+void Mqtt::on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg) {
+    if (msg->payloadlen > 0) {
+        static_cast<Mqtt*>(obj)->buffer = static_cast<char*>(msg->payload);
+        std::cout << "Получено сообщение: " << (char*)msg->payload << std::endl;
+        // Инициируем отключение после получения сообщения
+        mosquitto_disconnect(mosq);
     }
 }
 
+// Callback-функция при отключении
+void Mqtt::on_disconnect(struct mosquitto *mosq, void *obj, int rc) {
+    std::cout << "Отключено от брокера\n";
+    mosquitto_loop_stop(mosq, true); // Останавливаем цикл событий
+}
 
-Mqtt::Mqtt(){
-  mosquitto_lib_init();
-  mosq = mosquitto_new(CLIENT_ID, true, nullptr);
+Mqtt::Mqtt(std::string Host, unsigned int Port, std::string Topic){
+    this->host = Host;
+    this->port = Port;
+    this->topic = Topic;
+    // Инициализация библиотеки
+    mosquitto_lib_init();
 
-  if(!mosq){
-    std::cout << "Faild to create client" << std::endl;
-    return;
-  }
+    // Создание клиента
+    mosq = mosquitto_new(NULL, true, this);
+    if (!mosq) {
+        std::cout << "Ошибка создания клиента\n";
+        std::cout << stderr << std::endl;
+        return;
+    }
 
-  mosquitto_connect_callback_set(mosq, on_connect);
-  mosquitto_message_callback_set(mosq, on_message);
+    // Установка callback-функций
+    mosquitto_connect_callback_set(mosq, on_connect);
+    mosquitto_message_callback_set(mosq, on_message);
+    mosquitto_disconnect_callback_set(mosq, on_disconnect);
+}
 
-  rc = mosquitto_connect(mosq, BROKER_ADDRESS, BROKER_PORT, 60);
-  if(rc != MOSQ_ERR_SUCCESS){
-    std::cout << "Connect error: " << mosquitto_strerror(rc) << std::endl;
-    return;
-  }
+Mqtt::~Mqtt(){
+    mosquitto_destroy(this->mosq);
+    mosquitto_lib_cleanup();
+}
 
-  std::cout << "Listening for messages on topic '" << TOPIC << "'..." << std::endl;
+void Mqtt::connect(){
+    this->rc = mosquitto_connect(mosq, this->host.c_str(), this->port, 60);
+    if (this->rc != MOSQ_ERR_SUCCESS) {
+        std::cout << "Не удалось подключиться: " << mosquitto_strerror(this->rc) << std::endl;
+        return;
+    }
+    mosquitto_loop_forever(this->mosq, -1, 1);
 }
 
 std::string Mqtt::get_message(){
-  while(message.length() == 0){
-    mosquitto_loop(mosq, 100, 1);
-  }
-  std::string output(message);
-  message.shrink_to_fit();
-  return output;
+    return this->buffer;
 }

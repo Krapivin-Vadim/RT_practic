@@ -30,3 +30,7 @@ void MainEngine::right(int time_ms){
   left_motor.stop();
   right_motor.stop();
 }
+
+void MainEngine::stop(){
+  //empty method
+}

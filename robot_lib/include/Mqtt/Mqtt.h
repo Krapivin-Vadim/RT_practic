@@ -3,18 +3,19 @@
 #include <string>
 
 class Mqtt{
-  const char* BROKER_ADDRESS = "localhost";
-  const int BROKER_PORT = 1883;
-  static const char* TOPIC;
-  static const int QOS = 1;
-  const char* CLIENT_ID = "windows_subscriber";
-  struct mosquitto* mosq = nullptr;
+  struct mosquitto* mosq;
+  std::string topic;
   int rc;
+  std::string buffer;
+  std::string host;
+  unsigned int port;
   static void on_connect(struct mosquitto* mosq, void* userdata, int rc);
   static void on_message(struct mosquitto* mosq, void* userdata, const struct mosquitto_message* msg);
+  static void on_disconnect(struct mosquitto *mosq, void *obj, int rc);
 
 public:
-  Mqtt();
-  static std::string message;
+  Mqtt(std::string host, unsigned int port, std::string topic);
+  ~Mqtt();
+  void connect();
   std::string get_message();
 };
