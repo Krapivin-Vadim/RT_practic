@@ -18,4 +18,5 @@ public:
   ~Mqtt();
   void connect();
   std::string get_message();
+  void send_message(std::string message);
 };
