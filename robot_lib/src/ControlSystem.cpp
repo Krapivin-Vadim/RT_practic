@@ -50,7 +50,6 @@ void ControlSystem::run(){
   }
   cout << "stop run\n";
   Mqtt answear(this->addres, this->port, this->topic);
-  answear.connect();
   answear.send_message("done");
 }
 
