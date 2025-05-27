@@ -1,13 +1,76 @@
 import cv2
 import numpy as np
-from copy import deepcopy
+from keyboard import is_pressed
+from typing import Tuple
+# from copy import deepcopy
 from os.path import abspath
 
 PATH = '\\'.join([i for i in abspath(__file__).split("\\")[:-1]])
+# cap = cv2.VideoCapture(web_cam, cv2.CAP_DSHOW)
+
+
+def restart(func):
+    def wrapper(*args, **kwargs):
+        try:
+            func(args, kwargs)
+        except RetryExc:
+            func(args, kwargs)
+    return wrapper
+
+
+class RetryExc(Exception):
+    def __init__(self, func_name):
+        super().__init__(func_name)
+
+
+def void():
+    pass
+
+
+class Trackbar:
+    def __init__(self, color: str):
+        self.color = color
+        cv2.namedWindow(color, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(color, 640, 240)
+        cv2.createTrackbar("h_low", color, 0, 179, void)
+        cv2.createTrackbar("h_high", color, 0, 179, void)
+        cv2.createTrackbar("s_low", color, 0, 255, void)
+        cv2.createTrackbar("s_high", color, 0, 255, void)
+        cv2.createTrackbar("v_low", color, 0, 255, void)
+        cv2.createTrackbar("v_high", color, 0, 255, void)
+
+    def get_param(self, param: str) -> tuple([int, int]):
+        param_low = cv2.getTrackbarPos(f"{param}_low", self.color)
+        param_high = cv2.getTrackbarPos(f"{param}_high", self.color)
+        return param_low, param_high
+
+    def get_H(self) -> tuple([int, int]):
+        return self.get_param("h")
+
+    def get_S(self) -> tuple([int, int]):
+        return self.get_param("s")
+
+    def get_V(self) -> tuple([int, int]):
+        return self.get_param("v")
+
+    def get_lower(self) -> tuple([int, int, int]):
+        h, s, v = self.get_H()[0], self.get_S()[0], self.get_V()[0]
+        return h, s, v
+
+    def get_upper(self):
+        h, s, v = self.get_H()[1], self.get_S()[1], self.get_V()[1]
+        return h, s, v
 
 
 class Camera:
-    def __init__(self, camera):
+    def __init__(self, camera, mode="default"):
+        if mode == "work":
+            self.work = True
+            self.red_bar = Trackbar('red')
+            self.blue_bar = Trackbar("blue")
+            self.green_bar = Trackbar("green")
+            self.sycned = False
+
         self.cap = cv2.VideoCapture(camera)
         self.frame = None
         self.hsv = None
@@ -22,6 +85,23 @@ class Camera:
 
         self.angle = None
         self.H_matrix = None
+        self.blue_lower = np.array([98, 100, 100])
+        self.blue_upper = np.array([112, 255, 255])
+
+        self.red_lower = np.array([150, 100, 100])
+        self.red_upper = np.array([180, 255, 255])
+
+        self.green_lower = np.array([40, 40, 40])
+        self.green_upper = np.array([95, 255, 255])
+        self.color_devides = {"blue": [self.blue_lower,
+                                       self.blue_upper],
+                              "red": [self.red_lower,
+                                      self.red_upper],
+                              "green": [self.green_lower,
+                                        self.green_upper]}
+
+        # green_lower = np.array([40, 50, 50])
+        # green_upper = np.array([80, 255, 255])
 
     def __del__(self):
         self.cap.release()
@@ -30,11 +110,58 @@ class Camera:
         except Exception:
             pass
 
+    def sync(self):
+        if not self.work:
+            print("it is default mode")
+            return
+
+        np.copyto(self.blue_lower, self.blue_bar.get_lower())
+        np.copyto(self.blue_upper, self.blue_bar.get_upper())
+        np.copyto(self.green_lower, self.green_bar.get_lower())
+        np.copyto(self.green_upper, self.green_bar.get_upper())
+        np.copyto(self.red_lower, self.red_bar.get_lower())
+        np.copyto(self.red_upper, self.red_bar.get_upper())
+        self.sycned = True
+
+    def color_def(self):
+        if not self.work:
+            print("it is default mode")
+            return
+        while True:
+            self.sync()
+            self.sycned = False
+            self.imget()
+            self.to_hsv()
+            self.build_masks()
+            for color in self.color_location.keys():
+                if color == "middle":
+                    continue
+                self.get_color_location(color)
+            self.show(1)
+            self.bin_vis("blue", 1)
+            self.bin_vis("red", 1)
+            self.bin_vis("green", 1)
+            if is_pressed("q"):
+                break
+        self.sync()
+
+    def check_syched(self):
+        if not self.work:
+            print("it is default mode")
+            return
+        val = self.sycned
+        if val:
+            self.sycned = not self.sycned
+        return val
+
     def imget(self):
         if not self.cap:
             print("Undefined cap")
             return
         ret, self.frame = self.cap.read()
+        # print(self.frame[0])
+        if not ret:
+            print("frame error")
 
     def to_hsv(self):
         if self.frame is None:
@@ -47,18 +174,19 @@ class Camera:
             print("Undefined hsv")
             return
 
-        blue_lower = np.array([98, 100, 100])
-        blue_upper = np.array([112, 255, 255])
+        self.masks = {'blue': cv2.inRange(self.hsv, self.blue_lower, self.blue_upper),
+                      'green': cv2.inRange(self.hsv, self.green_lower, self.green_upper),
+                      'red': cv2.inRange(self.hsv, self.red_lower, self.red_upper)}
 
-        red_lower = np.array([150, 100, 100])
-        red_upper = np.array([165, 255, 255])
-
-        green_lower = np.array([40, 50, 50])
-        green_upper = np.array([80, 255, 255])
-
-        self.masks = {'blue': cv2.inRange(self.hsv, blue_lower, blue_upper),
-                      'green': cv2.inRange(self.hsv, green_lower, green_upper),
-                      'red': cv2.inRange(self.hsv, red_lower, red_upper)}
+    def bin_vis(self, color, waitkey):
+        # red_res = np.zeros_like(frame, dtype='uint8')
+        # red_res[red_mask == 255] = [255, 255, 255]
+        # cv2.imshow('red', red_res)
+        mask = self.masks[color]
+        res = np.zeros_like(self.frame, dtype='uint8')
+        res[mask == 255] = [255, 255, 255]
+        cv2.imshow(f"bin_{color}", res)
+        cv2.waitKey(waitkey)
 
     def get_color_location(self, color: str):
         if color == 'middle':
@@ -95,18 +223,21 @@ class Camera:
             (self.color_location['blue'][1] + self.color_location['red'][1]) / 2)
         self.color_location['middle'] = (middle_x, middle_y)
 
-    def show(self):
+    def show(self, wait):
+        cv2.imshow('frame', self.frame)
+        # cv2.waitKey(1)
         for color in self.color_location.keys():
             location = self.color_location[color]
-            if location is not None:
+            if location is None:
                 continue
+            location = [int(i) for i in location]
             cv2.circle(self.frame, location, 5,
                        (0, 0, 255), 1)  # Probably '-1'
             cv2.putText(self.frame, f'{location[0]}:{location[1]}',
                         (location[0]+10, location[1]-10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         cv2.imshow('frame', self.frame)
-        cv2.waitKey()
+        cv2.waitKey(wait)
 
     def get_vector(self, color1: str, color2: str):
         key = ''
@@ -138,14 +269,21 @@ class Camera:
         y = self.color_vector['red-blue'][1] * \
             self.color_vector['middle-green'][1]
         cos = (x + y) / (module_mg * module_rb)
-        self.angle = np.arccos(cos)
+        self.angle = np.degrees(np.arccos(cos))
         return [cos, self.angle]
 
-    def calibration(self, color):
+    @restart
+    def dynamic_calibration(self, color):
         srcPoints = []
         for i in range(4):
-            print("Start new point detection?")
+            print("Start new point detection? (y/n)")
             cmd = input()
+            if cmd == "n":
+                cmd = input("Restart calibration? (y/n)")
+                if cmd == "y":
+                    raise RetryExc
+                else:
+                    return
             self.get_color_location(color)
             srcPoints.append(self.color_locationp[color])
 
@@ -157,9 +295,9 @@ class Camera:
 
     def static_calibration(self, color):
         srcdataset = [
-            rf"{PATH}\true_dataset\photo_2025-05-23_22-21-{num}.jpg" for num in range(1, 5)]
+            rf"{PATH}\true_dataset\photo-{num}.jpg" for num in range(1, 5)]
         no_srcdataset = [
-            rf"{PATH}\perspective_dataset\photo_2025-05-23_22-20-{num}.jpg" for num in range(1, 5)]
+            rf"{PATH}\perspective_dataset\photo-{num}.jpg" for num in range(1, 5)]
 
         src_points = []
         no_src_points = []
@@ -182,32 +320,6 @@ class Camera:
         self.H_matrix, _ = cv2.findHomography(
             no_src_points, src_points, cv2.RANSAC, 3.0)
 
-        # # Only for test
-
-        # fixed_location = []
-
-        # for item in no_src_points:
-        #     item = np.append(item, 1)
-        #     res = np.dot(self.H_matrix, item)
-        #     res = res / res[2]
-        #     res = res[:2]
-        #     fixed_location.append(res)
-
-        # print(src_points, end='\n-----\n')
-        # print(no_src_points, end='\n-----\n')
-        # print(fixed_location)
-        # frame = cv2.imread(
-        #     rf"{PATH}\true_dataset\photo_2025-05-23_22-21-{4}.jpg")
-        # for point in fixed_location:
-        #     point = [int(i) for i in point]
-        #     cv2.circle(frame, point, 5,
-        #                (0, 0, 255), 1)  # Probably '-1'
-        #     cv2.putText(frame, f'{point[0]}:{point[1]}',
-        #                 (point[0]+10, point[1]-10),
-        #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-        # cv2.imshow("frame", frame)
-        # cv2.waitKey(-1)
-
     def fix_location(self):
         if self.H_matrix is None:
             print("Undefined Homography matrix")
@@ -224,28 +336,32 @@ class Camera:
                 res = res[:2]
                 item[key] = res
 
+    def save_settings(self):
+        def in_file(devides):
+            low = ' '.join([str(i) for i in devides[0]])
+            upper = ' '.join([str(i) for i in devides[1]])
+            a = f"[{low}, {upper}]\n"
+            return a
 
-if __name__ == '__main__':
+        with open("camera.conf", "w") as config:
+            for color in self.color_devides.keys():
+                config.write(f'{color}:{in_file(self.color_devides[color])}')
 
-    test = Camera(0)
-    test.static_calibration("blue")
-    test.imget()
-    img_frame = cv2.imread("C:\\Dev\\opencv_server\\test_4.jpg")
-    test.frame = img_frame
-    test.to_hsv()
-    test.build_masks()
+    def configure(self):
+        with open("camera.conf", "r") as config:
+            for string in config:
+                string = string.strip()
+                color = string[:string.index(":")]
+                low = string[string.index("[") + 1: string.index(",")]
+                low = list(map(int, low.split()))
+                high = string[string.index(",")+1: string.index("]")]
+                high = list(map(int, high.split()))
+                np.copyto(self.color_devides[color][0], low)
+                np.copyto(self.color_devides[color][1], high)
 
-    for color in test.color_location.keys():
-        test.get_color_location(color)
 
-    test.get_middle_location()
-
-    for vect in test.color_vector.keys():
-        color1, color2 = vect.split('-')
-        test.get_vector(color1, color2)
-
-    test.fix_location()
-
-    a = test.get_angle()
-
-    test.show()
+if __name__ == "__main__":
+    cam = Camera(0, "work")
+    cam.color_def()
+    cam.save_settings()
+    cam.configure()

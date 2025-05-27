@@ -1,5 +1,4 @@
 import paho.mqtt.client as mqtt
-import time
 
 
 def my_connect(topic):
