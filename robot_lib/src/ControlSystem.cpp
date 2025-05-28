@@ -34,10 +34,21 @@ void ControlSystem::run(){
   cout << "in run \n";
   this->running = true;
   string msg = Receiver.receive(this->addres, this->port, this->topic);
+  cout << "in run \n";
+  this->running = true;
+  string msg = Receiver.receive(this->addres, this->port, this->topic);
   list<Cmd> cmds = parseMessage(msg);
   while(cmds.size() > 0){
     Cmd cmd = cmds.front();
     std::cout << "Cmd >>>" << cmd.name << " " << cmd.args << std::endl;
+    if (cmd.name != "stop"){
+      std::function<void(int)> foo;
+      foo = Engine->cmd_list[cmd.name];
+      foo(cmd.args);
+    }
+    else{
+      this->running = false;
+    }
     if (cmd.name != "stop"){
       std::function<void(int)> foo;
       foo = Engine->cmd_list[cmd.name];
@@ -57,8 +68,13 @@ bool ControlSystem::isrunnig(){
   cout << "in isrunning\n";
   return this->running;
 }
+bool ControlSystem::isrunnig(){
+  cout << "in isrunning\n";
+  return this->running;
+}
 
 list<Cmd> ControlSystem::parseMessage(string message){
+  cout << "in parseMessage\n";
   cout << "in parseMessage\n";
   stringstream cmd_define(message);
   list<Cmd> out;
