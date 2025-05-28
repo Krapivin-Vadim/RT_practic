@@ -7,7 +7,7 @@ void sleep(int time_ms){
   std::this_thread::sleep_for(std::chrono::milliseconds(time_ms));
 }
 
-MainEngine::MainEngine() : left_motor(12, 13), right_motor(20, 21){
+MainEngine::MainEngine() : left_motor("0", 12, 13, 6), right_motor("0", 21, 20, 26){
   cmd_list["forward"] = [this](int x){forward(x);};
   cmd_list["left"] = [this](int x){left(x);};
   cmd_list["right"] = [this](int x){right(x);};
