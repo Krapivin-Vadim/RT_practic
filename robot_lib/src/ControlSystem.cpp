@@ -5,7 +5,7 @@
 #include <functional>
 #include "FooEngine.h"
 #include "MainEngine.h"
-#include "Mqtt.h"
+#include "../include/Mqtt/Mqtt.h"
 
 string work_mode = "work";
 
@@ -34,6 +34,9 @@ void ControlSystem::run(){
   cout << "in run \n";
   this->running = true;
   string msg = Receiver.receive(this->addres, this->port, this->topic);
+  cout << "in run \n";
+  this->running = true;
+  string msg = Receiver.receive(this->addres, this->port, this->topic);
   list<Cmd> cmds = parseMessage(msg);
   while(cmds.size() > 0){
     Cmd cmd = cmds.front();
@@ -46,11 +49,18 @@ void ControlSystem::run(){
     else{
       this->running = false;
     }
+    if (cmd.name != "stop"){
+      std::function<void(int)> foo;
+      foo = Engine->cmd_list[cmd.name];
+      foo(cmd.args);
+    }
+    else{
+      this->running = false;
+    }
     cmds.pop_front();
   }
   cout << "stop run\n";
   Mqtt answear(this->addres, this->port, this->topic);
-  answear.connect();
   answear.send_message("done");
 }
 
@@ -58,8 +68,13 @@ bool ControlSystem::isrunnig(){
   cout << "in isrunning\n";
   return this->running;
 }
+bool ControlSystem::isrunnig(){
+  cout << "in isrunning\n";
+  return this->running;
+}
 
 list<Cmd> ControlSystem::parseMessage(string message){
+  cout << "in parseMessage\n";
   cout << "in parseMessage\n";
   stringstream cmd_define(message);
   list<Cmd> out;
