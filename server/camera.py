@@ -361,7 +361,7 @@ class Camera:
 
 
 if __name__ == "__main__":
-    cam = Camera(0, "work")
-    cam.color_def()
-    cam.save_settings()
-    cam.configure()
+    cam = Camera(2, "work")
+    # cam.color_def()
+    # cam.save_settings()
+    # cam.configure()
