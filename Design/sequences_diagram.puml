@@ -1,26 +1,33 @@
 @startuml
 
 actor User
+Camera --> Camera : configure()
+Move --> ControlSystem : calibration()
+ControlSystem --> FooCmdReciver: run()
+FooCmdReciver --> Mqtt: receive()
+Mqtt --> FooCmdReciver: get_message()
+ControlSystem --> ControlSystem: ParseMessage()
+ControlSystem --> MainEngine
+MainEngine --> Motor: <move>(time_ms)
+Motor --> MainEngine
+MainEngine --> ControlSystem
+ControlSystem --> Mqtt
+Mqtt --> ControlSystem: send_message(text)
 
-
-User -->  Telegram_bot : make_an_order()
-Telegram_bot --> Server : add_order_to_list()
-Server --> Navigation_system : process_order()
-Navigation_system --> Camera : get_extruder_location()
-Camera --> Navigation_system : extruder_location
-Navigation_system --> Camera : get_bot_location()
-Camera --> Navigation_system : bot_location
-Navigation_system --> Camera : get_user_location()
-Camera --> Navigation_system : user_location
-Navigation_system --> Bot : send_route()
-Bot --> User : follow_to_user()
-User --> Bot : give a cap
-Bot --> Extruder : follow_to_extruder()
-Extruder --> start_pouring
-start_pouring --> stop_pouring
-stop_pouring --> Bot : cap_is_full()
-Bot --> User : follow_to_user()
-Bot --> Server : send_success_status()
+User -->  Telegram_bot : handle_message()
+Telegram_bot --> Move: buffer
+Move --> ControlSystem: commander()
+ControlSystem --> FooCmdReciver: run()
+FooCmdReciver --> Mqtt: receive()
+Mqtt --> FooCmdReciver: get_message()
+ControlSystem --> ControlSystem: ParseMessage()
+ControlSystem --> MainEngine
+MainEngine --> Motor: <move>(time_ms)
+Motor --> MainEngine
+MainEngine --> ControlSystem
+ControlSystem --> Mqtt
+Mqtt --> ControlSystem: send_message(text)
+Telegram_bot --> Telegram_bot: pop_order()
 
 
 @enduml

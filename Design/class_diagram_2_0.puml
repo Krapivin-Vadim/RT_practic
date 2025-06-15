@@ -1,63 +1,89 @@
 @startuml Class_diagram
 
-class Server{
-  orders_list
-  add_order_to_list()
-  process_order()
+class Camera{
+    sync(self)
+    color_def(self)
+    check_syched(self)
+    imget(self)
+    to_hsv(self)
+    build_masks(self)
+    bin_vis(self, color, waitkey)
+    get_color_location(self, color: str)
+    get_middle_location(self)
+    show(self, wait):
+    get_vector(self, color1: str, color2: str)
+    get_angle(self)
+    dynamic_calibration(self, color)
+    static_calibration(self, color)
+    fix_location(self)
+    save_settings(self)
+    configure(self)
+} 
+
+class Trackbar{
+    get_param(self, param: str)
+    get_H(self)
+    get_S(self)
+    get_V(self)
+    get_lower(self)
+    get_upper(self)
 }
 
-class Camera{
-  find_user()
-  find_robot()
-  find_extruder()
-  send_datas()
-} 
+class Move{
+    setup(self)
+    get_params(self)
+    right(self)
+    test_speed(self, color, duration=1000)
+    speed_define(self, duration=700)
+    rotattion_define(self, duration=200)
+    move_define(self)
+    turn_define(self)
+    commander(self)
+    reached(self, acc=100)
+    calibration(self)
+}
+
+class Mosquitto{
+  topic
+  port
+  host
+  buffer
+  pub(self, message)
+  get_messsage(self)
+}
 
 class Telegram_bot{
   make_an_order()
   send_datas()
 }
 
-class Navigation_system{
-  user_location
-  robot_location
-  extruder_location
-  get_user_location()
-  get_robot_location()
-  route(destination_point)
-  send_route()
-}
 
-class Robot{
-  read_route()
-  follow_to_user()
-  follow_to_extruder()
-  send_success_statu()
+class MainEngine{
+  void forward(int time_ms)
+  void left(int time_ms)
+  void right(int time_ms)
+  void stop(int time_ms)
 }
 
 
-
-class Extruder{
-  сurrent_coffee_volume
-  start_pouring()
-  stop_pouring()
-  cap_is_fuul()
+class Motor{
+    void forward();
+    void backward();
+    void stop();
 }
-
-' class Motor{
-'   start()
-'   move_forward(distance)
-'   turn_right(degree)
-'   turn_left(degree)
-'   move_back(distance)
-'   stop()
-' }
 
 class ControlSystem{
-  Engine
-  CmdReceiver
-  void run()
-  Cmd parseMessage(string msg)
+  bool running;
+  string addres;
+  unsigned int port;
+  string topic;
+  FooEngine* Engine;
+  FooCmdReceiver Receiver;
+  list<Cmd> parseMessage(string message);
+  void run();
+  ControlSystem(...);
+  ~ControlSystem();
+  bool isrunnig();
 }
 
 class AEngine{
@@ -89,17 +115,35 @@ struct Cmd{
   int args
 }
 
-Server <-- Telegram_bot
-Camera --> Navigation_system
-Robot --> Navigation_system
-Extruder --> Navigation_system
-Navigation_system --* Server
+class Mqtt{
+  struct mosquitto* mosq;
+  std::string topic;
+  int rc;
+  std::string buffer;
+  std::string host;
+  unsigned int port;
+  static void on_connect(...);
+  static void on_message(...);
+  static void on_disconnect(...);
+  void connect();
+  std::string get_message()
+  void send_message(std::string message)
+}
+
+
+MainEngine <|-- FooEngine
+MainEngine -* ControlSystem
 
 FooEngine <|-- AEngine
 FooCmdReceiver <|--  ACmd_Recevier
 ControlSystem *-- FooCmdReceiver
 ControlSystem *-- FooEngine
 Cmd -> ControlSystem 
-Robot *-- ControlSystem
-
+Mosquitto -* Move
+Move *-- Camera
+Trackbar -* Camera
+MainEngine *-- Motor
+FooCmdReceiver <- Mqtt
+Move <- Telegram_bot
+Mqtt <- Mosquitto
 @enduml
