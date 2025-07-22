@@ -1,6 +1,0 @@
-build
-mymqtt
-.gitignore
-/build/
-.mypy_cache
-__pycache__

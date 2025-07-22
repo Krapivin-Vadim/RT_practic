@@ -69,6 +69,7 @@ class Camera:
             self.red_bar = Trackbar('red')
             self.blue_bar = Trackbar("blue")
             self.green_bar = Trackbar("green")
+            self.yellow_bar = Trackbar("yellow")
             self.sycned = False
 
         self.cap = cv2.VideoCapture(camera)
@@ -77,10 +78,12 @@ class Camera:
         self.color_location = {'blue': None,
                                'green': None,
                                'red': None,
+                               'yellow': None,
                                'middle': None}
         self.color_vector = {
             'red-blue': None,
-            'middle-green': None
+            'middle-green': None,
+            'middle-yellow': None
         }
 
         self.angle = None
@@ -93,12 +96,18 @@ class Camera:
 
         self.green_lower = np.array([40, 40, 40])
         self.green_upper = np.array([95, 255, 255])
+
+        self.yellow_lower = np.array([20, 100, 100])
+        self.yellow_upper = np.array([30, 255, 255])
+
         self.color_devides = {"blue": [self.blue_lower,
                                        self.blue_upper],
                               "red": [self.red_lower,
                                       self.red_upper],
                               "green": [self.green_lower,
-                                        self.green_upper]}
+                                        self.green_upper],
+                              "yellow": [self.yellow_lower,
+                                         self.yellow_upper]}
 
         # green_lower = np.array([40, 50, 50])
         # green_upper = np.array([80, 255, 255])
@@ -121,6 +130,8 @@ class Camera:
         np.copyto(self.green_upper, self.green_bar.get_upper())
         np.copyto(self.red_lower, self.red_bar.get_lower())
         np.copyto(self.red_upper, self.red_bar.get_upper())
+        np.copyto(self.yellow_lower, self.yellow_bar.get_lower())
+        np.copyto(self.yellow_upper, self.yellow_bar.get_upper())
         self.sycned = True
 
     def color_def(self):
@@ -141,6 +152,7 @@ class Camera:
             self.bin_vis("blue", 1)
             self.bin_vis("red", 1)
             self.bin_vis("green", 1)
+            self.bin_vis('yellow', 1)
             if is_pressed("q"):
                 break
         self.sync()
@@ -176,7 +188,8 @@ class Camera:
 
         self.masks = {'blue': cv2.inRange(self.hsv, self.blue_lower, self.blue_upper),
                       'green': cv2.inRange(self.hsv, self.green_lower, self.green_upper),
-                      'red': cv2.inRange(self.hsv, self.red_lower, self.red_upper)}
+                      'red': cv2.inRange(self.hsv, self.red_lower, self.red_upper),
+                      'yellow': cv2.inRange(self.hsv, self.yellow_lower, self.yellow_upper)}
 
     def bin_vis(self, color, waitkey):
         # red_res = np.zeros_like(frame, dtype='uint8')
@@ -223,12 +236,14 @@ class Camera:
             (self.color_location['blue'][1] + self.color_location['red'][1]) / 2)
         self.color_location['middle'] = (middle_x, middle_y)
 
-    def show(self, wait):
-        cv2.imshow('frame', self.frame)
+    def show(self, wait, name='frame'):
+        # cv2.imshow('frame', self.frame)
         # cv2.waitKey(1)
+        self.imget()
         for color in self.color_location.keys():
             location = self.color_location[color]
             if location is None:
+                print(f"{color} is None")
                 continue
             location = [int(i) for i in location]
             cv2.circle(self.frame, location, 5,
@@ -236,7 +251,16 @@ class Camera:
             cv2.putText(self.frame, f'{location[0]}:{location[1]}',
                         (location[0]+10, location[1]-10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-        cv2.imshow('frame', self.frame)
+        for vect in self.color_vector.keys():
+            if self.color_vector[vect] is None:
+                continue
+            color_1, color_2 = vect.split('-')
+            point_1 = self.color_location[color_1]
+            point_2 = self.color_location[color_2]
+            cv2.line(self.frame, (int(point_1[0]), int(point_1[1])),
+                     (int(point_2[0]), int(point_2[1])), (0, 0, 255), 1)
+            self.frame.resize()
+        cv2.imshow(name, self.frame)
         cv2.waitKey(wait)
 
     def get_vector(self, color1: str, color2: str):
@@ -245,11 +269,15 @@ class Camera:
             key = 'red-blue'
             end = self.color_location['blue']
             begin = self.color_location['red']
+        elif color1 == "yellow" or color2 == "yellow":
+            key = "middle-yellow"
+            end = self.color_location['yellow']
+            begin = self.color_location['middle']
         else:
             key = 'middle-green'
             end = self.color_location['green']
             begin = self.color_location['middle']
-        if not begin or not end:
+        if begin is None or end is None:
             print('Undefind color location (vector)')
             return
         vect_x = end[0] - begin[0]
@@ -257,17 +285,18 @@ class Camera:
         vector = (vect_x, vect_y)
         self.color_vector[key] = vector
 
-    def get_angle(self):
+    def get_angle(self, target):
+        # target принимает значения 'middle-green', 'middle-yellow'
         for vect in self.color_vector.keys():
             if self.color_vector[vect] is None:
                 print(f'Undefind vector {vect}')
                 return
         module_rb = np.linalg.norm(self.color_vector['red-blue'])
-        module_mg = np.linalg.norm(self.color_vector['middle-green'])
+        module_mg = np.linalg.norm(self.color_vector[target])
         x = self.color_vector['red-blue'][0] * \
-            self.color_vector['middle-green'][0]
+            self.color_vector[target][0]
         y = self.color_vector['red-blue'][1] * \
-            self.color_vector['middle-green'][1]
+            self.color_vector[target][1]
         cos = (x + y) / (module_mg * module_rb)
         self.angle = np.degrees(np.arccos(cos))
         return [cos, self.angle]
@@ -324,17 +353,14 @@ class Camera:
         if self.H_matrix is None:
             print("Undefined Homography matrix")
             return
-        all_locations = [self.color_location, self.color_vector]
-        for item in all_locations:
-            for key in item.keys():
-                if item[key] is None:
-                    continue
-
-                item_3_dim = np.append(item[key], 1)
-                res = np.dot(self.H_matrix, item_3_dim)
-                res = res / res[2]
-                res = res[:2]
-                item[key] = res
+        for color in self.color_location.keys():
+            if color == "middle":
+                continue
+            point = self.color_location[color]
+            src_point = np.array([[point]], dtype=np.float32)
+            dst_point = cv2.perspectiveTransform(src_point, self.H_matrix)
+            x, y = dst_point[0][0]
+            self.color_location[color] = [int(x), int(y)]
 
     def save_settings(self):
         def in_file(devides):
@@ -359,9 +385,43 @@ class Camera:
                 np.copyto(self.color_devides[color][0], low)
                 np.copyto(self.color_devides[color][1], high)
 
+    def static_calibration_2(self):
+        file = rf"{PATH}\photo.jpg"
+        img = cv2.imread(file)
+        self.frame = img
+        self.to_hsv()
+        self.build_masks()
+        true_points = []
+
+        for color in self.color_location.keys():
+            if color == 'middle':
+                continue
+            self.get_color_location(color)
+            true_points.append(self.color_location[color])
+
+        print("TRUE")
+        print(self.color_location)
+
+        self.imget()
+        self.to_hsv()
+        self.build_masks()
+        persp_points = []
+
+        for color in self.color_location.keys():
+            if color == 'middle':
+                continue
+            self.get_color_location(color)
+            persp_points.append(self.color_location[color])
+
+        src_points = np.array(true_points, dtype=np.float32)
+        no_src_points = np.array(persp_points, dtype=np.float32)
+        self.H_matrix, _ = cv2.findHomography(
+            no_src_points, src_points, cv2.RANSAC, 3.0)
+        self.H_matrix = np.linalg.inv(self.H_matrix)
+
 
 if __name__ == "__main__":
-    cam = Camera(2, "work")
-    # cam.color_def()
-    # cam.save_settings()
-    # cam.configure()
+    cam = Camera(0, "work")
+    cam.color_def()
+    cam.save_settings()
+    cam.configure()
