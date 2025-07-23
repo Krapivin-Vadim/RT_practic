@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FBType Name="OPC_Client" Comment="Simple FB with one algorithm">
+	<Identification Standard="61499-1">
+	</Identification>
+	<VersionInfo Version="1.0" Author="vadim" Date="2025-07-18">
+	</VersionInfo>
+	<CompilerInfo>
+	</CompilerInfo>
+	<InterfaceList>
+		<EventInputs>
+			<Event Name="REQ" Type="Event" Comment="Normal Execution Request">
+				<With Var="ns_1"/>
+				<With Var="i_1"/>
+				<With Var="ns_2"/>
+				<With Var="i_2"/>
+				<With Var="QI"/>
+				<With Var="URL"/>
+			</Event>
+		</EventInputs>
+		<EventOutputs>
+			<Event Name="CNF" Type="Event" Comment="Execution Confirmation">
+				<With Var="Movement"/>
+				<With Var="Duration"/>
+				<With Var="QO"/>
+				<With Var="Enable"/>
+			</Event>
+		</EventOutputs>
+		<InputVars>
+			<VarDeclaration Name="QI" Type="BOOL"/>
+			<VarDeclaration Name="ns_1" Type="INT" Comment="ns for first var"/>
+			<VarDeclaration Name="i_1" Type="INT" Comment="i for first var"/>
+			<VarDeclaration Name="ns_2" Type="INT" Comment="ns for second var"/>
+			<VarDeclaration Name="i_2" Type="INT" Comment="i for second var"/>
+			<VarDeclaration Name="URL" Type="STRING" Comment="OPC-server URL"/>
+		</InputVars>
+		<OutputVars>
+			<VarDeclaration Name="QO" Type="BOOL"/>
+			<VarDeclaration Name="Movement" Type="STRING" Comment="Kind of movement"/>
+			<VarDeclaration Name="Duration" Type="INT" Comment="Duration (ms)"/>
+			<VarDeclaration Name="Enable" Type="BOOL" Comment="Enable to start movement"/>
+		</OutputVars>
+	</InterfaceList>
+	<SimpleFB>
+		<ECState Name="REQ">
+			<ECAction Algorithm="REQ" Output="CNF"/>
+		</ECState>
+		<Algorithm Name="REQ">
+			<ST><![CDATA[]]></ST>
+		</Algorithm>
+	</SimpleFB>
+</FBType>

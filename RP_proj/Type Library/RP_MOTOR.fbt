@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FBType Name="RP_MOTOR" Comment="Simple FB with one algorithm">
+	<Identification Standard="61499-1">
+	</Identification>
+	<VersionInfo Version="1.0" Author="vadim" Date="2025-07-17">
+	</VersionInfo>
+	<CompilerInfo>
+	</CompilerInfo>
+	<InterfaceList>
+		<EventInputs>
+			<Event Name="REQ" Type="Event" Comment="Normal Execution Request">
+				<With Var="QI"/>
+				<With Var="pin_1"/>
+				<With Var="pin_2"/>
+				<With Var="EN_pin"/>
+				<With Var="DURATION"/>
+				<With Var="MOVEMENT"/>
+				<With Var="device"/>
+			</Event>
+		</EventInputs>
+		<EventOutputs>
+			<Event Name="CNF" Type="Event" Comment="Execution Confirmation">
+				<With Var="QO"/>
+			</Event>
+		</EventOutputs>
+		<InputVars>
+			<VarDeclaration Name="QI" Type="BOOL" Comment="enable for cur. block"/>
+			<VarDeclaration Name="device" Type="STRING" Comment="device name"/>
+			<VarDeclaration Name="pin_1" Type="INT" Comment="pin 1"/>
+			<VarDeclaration Name="pin_2" Type="INT" Comment="pin 2"/>
+			<VarDeclaration Name="EN_pin" Type="INT" Comment="Enable pin"/>
+			<VarDeclaration Name="MOVEMENT" Type="STRING" Comment="forward/backward"/>
+			<VarDeclaration Name="DURATION" Type="INT" Comment="duration (ms)"/>
+		</InputVars>
+		<OutputVars>
+			<VarDeclaration Name="QO" Type="BOOL" Comment="Enable for next block"/>
+		</OutputVars>
+	</InterfaceList>
+	<SimpleFB>
+		<ECState Name="REQ">
+			<ECAction Algorithm="REQ" Output="CNF"/>
+		</ECState>
+		<Algorithm Name="REQ">
+			<ST><![CDATA[]]></ST>
+		</Algorithm>
+	</SimpleFB>
+</FBType>
