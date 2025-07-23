@@ -192,12 +192,10 @@ CIEC_ANY *FORTE_OPC_Client::getVarInternal(size_t) {
 using namespace std;
 
 void FORTE_OPC_Client::alg_REQ(void) {
-
   if(!var_QI){
     var_QO = CIEC_BOOL(false);
     return;
   }
-
   int ns_1 = var_ns_1.getSignedValue();
   int i_1 = var_i_1.getSignedValue();
   int ns_2 = var_ns_2.getSignedValue();
@@ -212,65 +210,30 @@ void FORTE_OPC_Client::alg_REQ(void) {
   UA_NodeId stringVarId = UA_NODEID_NUMERIC(ns_2, i_2);
   UA_Variant boolValue;
   UA_Variant stringValue;
-    UA_Variant_init(&boolValue);
-    UA_Variant_init(&stringValue);
-    
-  
+  UA_Variant_init(&boolValue);
+  UA_Variant_init(&stringValue);
   UA_Client_readValueAttribute(client, boolVarId, &boolValue);
-    
-  
   UA_Client_readValueAttribute(client, stringVarId, &stringValue);
-
-  
-  
-  
-    
-  
-  
   bool boolValueConverted = *(UA_Boolean*)boolValue.data;
-    
-  
-  
   UA_String* stringData = (UA_String*)stringValue.data;
-    
   std::string stringValueConverted = 
       std::string((char*)stringData->data, stringData->length);
-
-
   std::cout << "=== ТЕКУЩИЕ ЗНАЧЕНИЯ ===" << std::endl;
   std::cout << "Булева переменная (ns=2;i=2): " 
             << (boolValueConverted ? "true" : "false") << std::endl;
   std::cout << "Строковая переменная (ns=2;i=3): '" 
             << stringValueConverted << "'\n" << std::endl;
-
-
-    
-
   bool newBoolValue = false;
-    
-
   UA_Variant newValueContainer;
   UA_Variant_init(&newValueContainer);
-    
-
   UA_Variant_setScalar(&newValueContainer, &newBoolValue, &UA_TYPES[UA_TYPES_BOOLEAN]);
-    
-
   UA_Client_writeValueAttribute(client, boolVarId, &newValueContainer);
   std::cout << "Изменили булево значение на: " 
             << (newBoolValue ? "true" : "false") << std::endl;
-
-
-    
-
   UA_Variant_clear(&boolValue);
   UA_Variant_clear(&stringValue);
-    
-
   std::cout << "\nОтключаемся от сервера..." << std::endl;
   UA_Client_disconnect(client);
-    
-
   UA_Client_delete(client);
   var_Enable = CIEC_BOOL(boolValueConverted);
   stringstream stream(stringValueConverted);
