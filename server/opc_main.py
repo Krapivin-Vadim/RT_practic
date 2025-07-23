@@ -28,8 +28,8 @@ mv.start_video(Yep)
 #     q = input("REDEFINE MOVE CONSTANS? (y/n)")
 #     agr = (q != "y")
 
-mv.speed = 0.10200016196949765
-mv.rotation = 0.3323253483301088
+mv.speed = 0.2766010904991268
+mv.rotation = 0.38134495540876817
 
 start = input("START MOVEMENT? (y/n)")
 while start != "n":

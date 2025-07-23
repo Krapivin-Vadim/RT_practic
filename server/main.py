@@ -1,19 +1,13 @@
 from camera import Camera
-from telegram import Drink_offer_bot
-from telegram import TOKEN
-from mosquitto import Mosquitto
-import threading
 from move import Move
 from time import sleep
 
-cam = "https://192.168.1.65:8080/video"
+cam = 0
 mqtt_pub_topic = "test/topic"
 mqtt_sub_topic = "test/topic"
 
 if __name__ == "__main__":
     camera = Camera(cam)
-    telegram_bot = Drink_offer_bot(TOKEN)
-    mosquitto = Mosquitto(mqtt_pub_topic, mqtt_sub_topic)
     mv = Move(camera, mosquitto)
 
     agr = False
