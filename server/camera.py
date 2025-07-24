@@ -417,7 +417,6 @@ class Camera:
         no_src_points = np.array(persp_points, dtype=np.float32)
         self.H_matrix, _ = cv2.findHomography(
             no_src_points, src_points, cv2.RANSAC, 3.0)
-        self.H_matrix = np.linalg.inv(self.H_matrix)
 
 
 if __name__ == "__main__":
